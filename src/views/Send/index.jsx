@@ -21,6 +21,7 @@ export const Send = ({ templates, setHistory }) => {
   const [form, setForm] = useState({ type: "sms", templateId: "", recipient: "", variables: {} });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
 
   const selectedTemplate = templates.find((t) => String(t.id) === String(form.templateId));
   const typeTemplates = templates.filter((t) => t.type === form.type);
@@ -32,9 +33,36 @@ export const Send = ({ templates, setHistory }) => {
     ]),
   ];
 
-  const handleSend = () => {
+  const handleSend = async () => {
     setSending(true);
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const endpoint = form.type === "sms" ? "/api/send/sms" : "/api/send/email";
+
+      const payload = form.type === "sms"
+        ? {
+            to: form.recipient,
+            body: resolveBody(selectedTemplate?.body, form.variables),
+          }
+        : {
+            to: form.recipient,
+            subject: resolveBody(selectedTemplate?.subject, form.variables),
+            body: resolveBody(selectedTemplate?.body, form.variables),
+          };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Something went wrong");
+      }
+
       setHistory((prev) => [
         {
           id: Date.now(),
@@ -46,15 +74,20 @@ export const Send = ({ templates, setHistory }) => {
         },
         ...prev,
       ]);
-      setSending(false);
+
       setSent(true);
-    }, 1600);
+    } catch (err) {
+      setError(err.message || "Failed to send. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const reset = () => {
     setForm({ type: "sms", templateId: "", recipient: "", variables: {} });
     setStep(1);
     setSent(false);
+    setError(null);
   };
 
   // Success state
@@ -165,14 +198,7 @@ export const Send = ({ templates, setHistory }) => {
                       textAlign: "left",
                     }}
                   >
-                    <span
-                      style={{
-                        padding: 9,
-                        background: form.type === ch.v ? ch.style.bg : theme.bg,
-                        borderRadius: 7,
-                        display: "flex",
-                      }}
-                    >
+                    <span style={{ padding: 9, background: form.type === ch.v ? ch.style.bg : theme.bg, borderRadius: 7, display: "flex" }}>
                       <ch.Icon size={18} color={form.type === ch.v ? ch.style.text : theme.textSecondary} />
                     </span>
                     <div>
@@ -259,18 +285,7 @@ export const Send = ({ templates, setHistory }) => {
                   Subject: {resolveBody(selectedTemplate?.subject, form.variables)}
                 </p>
               )}
-              <div
-                style={{
-                  background: theme.surface,
-                  border: `1px solid ${theme.border}`,
-                  borderRadius: 6,
-                  padding: 14,
-                  fontSize: 13,
-                  color: theme.text,
-                  fontFamily: font,
-                  lineHeight: 1.6,
-                }}
-              >
+              <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 6, padding: 14, fontSize: 13, color: theme.text, fontFamily: font, lineHeight: 1.6 }}>
                 {form.type === "sms" ? (
                   <p style={{ margin: 0 }}>{resolveBody(selectedTemplate?.body, form.variables)}</p>
                 ) : (
@@ -279,24 +294,25 @@ export const Send = ({ templates, setHistory }) => {
               </div>
             </div>
 
+            {/* Error Banner */}
+            {error && (
+              <div style={{ background: theme.error.bg, border: `1px solid #F5C0C0`, borderRadius: 8, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ marginTop: 1 }}>
+                  <IconAlert size={14} color={theme.error.text} />
+                </div>
+                <p style={{ fontSize: 13, color: theme.error.text, margin: 0, fontFamily: font, lineHeight: 1.5 }}>
+                  {error}
+                </p>
+              </div>
+            )}
+
             {/* Warning Banner */}
-            <div
-              style={{
-                background: theme.warning.bg,
-                border: `1px solid #E8D9A0`,
-                borderRadius: 8,
-                padding: "12px 16px",
-                marginBottom: 20,
-                display: "flex",
-                gap: 10,
-                alignItems: "flex-start",
-              }}
-            >
+            <div style={{ background: theme.warning.bg, border: `1px solid #E8D9A0`, borderRadius: 8, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10, alignItems: "flex-start" }}>
               <div style={{ marginTop: 1 }}>
                 <IconAlert size={14} color={theme.warning.text} />
               </div>
               <p style={{ fontSize: 13, color: theme.warning.text, margin: 0, fontFamily: font, lineHeight: 1.5 }}>
-                This will send a live {form.type === "sms" ? "SMS via Twilio" : "email via Paubox"}. Ensure your API keys are configured in Settings.
+                This will send a live {form.type === "sms" ? "SMS via Twilio" : "email via Paubox"}.
               </p>
             </div>
 
