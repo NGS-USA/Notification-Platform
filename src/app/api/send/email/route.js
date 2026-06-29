@@ -1,8 +1,15 @@
 import { supabase } from "@/lib/supabase";
+import { validateApiKey } from "@/lib/authMiddleware";
 
 export async function POST(request) {
+  // Validate API key
+  const { error: authError, status: authStatus, app } = await validateApiKey(request);
+  if (authError) {
+    return Response.json({ error: authError }, { status: authStatus });
+  }
+
   try {
-    const { to, subject, body, template_id, contact_id, app_id } = await request.json();
+    const { to, subject, body, template_id, contact_id } = await request.json();
 
     if (!to || !subject || !body) {
       return Response.json(
@@ -43,11 +50,11 @@ export async function POST(request) {
 
     const result = await response.json();
 
-    // Log the successful send to Supabase
+    // Log the successful send
     const { data: logEntry } = await supabase
       .from("message_logs")
       .insert([{
-        app_id,
+        app_id: app.id,
         template_id,
         contact_id,
         type: "email",
@@ -63,8 +70,8 @@ export async function POST(request) {
   } catch (error) {
     console.error("Paubox error:", error);
 
-    // Log the failure to Supabase
     await supabase.from("message_logs").insert([{
+      app_id: app.id,
       type: "email",
       recipient: "unknown",
       body: "unknown",

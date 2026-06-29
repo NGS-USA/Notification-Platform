@@ -1,11 +1,16 @@
 import twilio from "twilio";
 import { supabase } from "@/lib/supabase";
+import { validateApiKey } from "@/lib/authMiddleware";
 
 export async function POST(request) {
-  let logEntry = null;
+  // Validate API key
+  const { error: authError, status: authStatus, app } = await validateApiKey(request);
+  if (authError) {
+    return Response.json({ error: authError }, { status: authStatus });
+  }
 
   try {
-    const { to, body, template_id, contact_id, app_id } = await request.json();
+    const { to, body, template_id, contact_id } = await request.json();
 
     if (!to || !body) {
       return Response.json(
@@ -25,11 +30,11 @@ export async function POST(request) {
       to,
     });
 
-    // Log the successful send to Supabase
-    const { data } = await supabase
+    // Log the successful send
+    const { data: logEntry } = await supabase
       .from("message_logs")
       .insert([{
-        app_id,
+        app_id: app.id,
         template_id,
         contact_id,
         type: "sms",
@@ -40,14 +45,12 @@ export async function POST(request) {
       .select()
       .single();
 
-    logEntry = data;
-
     return Response.json({ success: true, messageId: message.sid, log: logEntry });
   } catch (error) {
     console.error("Twilio error:", error);
 
-    // Log the failure to Supabase
     await supabase.from("message_logs").insert([{
+      app_id: app.id,
       type: "sms",
       recipient: "unknown",
       body: "unknown",
