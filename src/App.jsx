@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { theme } from "./theme";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { theme, font } from "./theme";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Dashboard } from "./views/Dashboard";
 import { Apps } from "./views/Apps";
@@ -17,6 +18,8 @@ export default function App() {
   const [templates, setTemplates] = useState([]);
   const [history, setHistory] = useState(INITIAL_HISTORY);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const { signOut } = useClerk();
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -35,7 +38,13 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: theme.bg }}>
-      <Sidebar view={view} setView={setView} templateCount={templates.length} />
+      <Sidebar
+        view={view}
+        setView={setView}
+        templateCount={templates.length}
+        user={user}
+        onSignOut={() => signOut({ redirectUrl: "/sign-in" })}
+      />
       <main style={{ flex: 1, overflow: "auto", padding: "36px 40px" }}>
         {view === "dashboard" && <Dashboard templates={templates} history={history} setView={setView} />}
         {view === "apps" && <Apps />}
