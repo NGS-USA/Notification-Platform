@@ -361,6 +361,105 @@ export const Docs = () => (
 });`} language="js" />
     </Section>
 
+    {/* Bulk Send */}
+        <Section title="Bulk Send">
+          <Endpoint method="POST" path="/api/send/bulk" description="Send a message to multiple recipients in one request" />
+          <p style={{ fontSize: 14, color: theme.textSecondary, margin: "12px 0 16px", fontFamily: font, lineHeight: 1.6 }}>
+            Sends to all recipients in parallel and returns a full summary of delivered and failed messages. Each recipient can have its own body and subject so template variables can be resolved server-side in your app before calling this endpoint.
+          </p>
+
+          <p style={{ fontSize: 13, fontWeight: 600, color: theme.text, margin: "0 0 8px", fontFamily: font }}>Request body</p>
+          <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, overflow: "hidden", marginBottom: 20 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: theme.bg }}>
+                  <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: theme.textMuted, fontFamily: font, borderBottom: `1px solid ${theme.border}` }}>Field</th>
+                  <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: theme.textMuted, fontFamily: font, borderBottom: `1px solid ${theme.border}` }}>Type</th>
+                  <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: theme.textMuted, fontFamily: font, borderBottom: `1px solid ${theme.border}` }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ParamRow name="type" type="string" required description="Channel to send on: sms or email" />
+                <ParamRow name="recipients" type="array" required description="Array of recipient objects — see fields below" />
+                <ParamRow name="template_id" type="uuid" description="Optional. ID of the Notifyio template used for logging" />
+              </tbody>
+            </table>
+          </div>
+
+          <p style={{ fontSize: 13, fontWeight: 600, color: theme.text, margin: "0 0 8px", fontFamily: font }}>Recipient object fields</p>
+          <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, overflow: "hidden", marginBottom: 20 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: theme.bg }}>
+                  <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: theme.textMuted, fontFamily: font, borderBottom: `1px solid ${theme.border}` }}>Field</th>
+                  <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: theme.textMuted, fontFamily: font, borderBottom: `1px solid ${theme.border}` }}>Type</th>
+                  <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: theme.textMuted, fontFamily: font, borderBottom: `1px solid ${theme.border}` }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ParamRow name="to" type="string" required description="Phone number (SMS) or email address (email)" />
+                <ParamRow name="body" type="string" required description="Message body — HTML supported for email" />
+                <ParamRow name="subject" type="string" description="Required for email. Subject line." />
+                <ParamRow name="contact_id" type="uuid" description="Optional. Notifyio contact ID for log linking" />
+              </tbody>
+            </table>
+          </div>
+
+          <p style={{ fontSize: 13, fontWeight: 600, color: theme.text, margin: "0 0 8px", fontFamily: font }}>Example request — SMS</p>
+          <CodeBlock code={`fetch("https://notification-platform-psi.vercel.app/api/send/bulk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer nfy_your_api_key_here"
+      },
+      body: JSON.stringify({
+        type: "sms",
+        recipients: [
+          { to: "+13025550100", body: "Hi John, your appointment is tomorrow at 9am." },
+          { to: "+14105550147", body: "Hi Sarah, your appointment is tomorrow at 11am." },
+          { to: "+13025550288", body: "Hi Mike, your appointment is tomorrow at 2pm." }
+        ]
+      })
+    });`} language="js" />
+
+          <p style={{ fontSize: 13, fontWeight: 600, color: theme.text, margin: "0 0 8px", fontFamily: font }}>Example request — Email</p>
+          <CodeBlock code={`fetch("https://notification-platform-psi.vercel.app/api/send/bulk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer nfy_your_api_key_here"
+      },
+      body: JSON.stringify({
+        type: "email",
+        recipients: [
+          {
+            to: "john@example.com",
+            subject: "Your appointment is tomorrow",
+            body: "<p>Hi John, your appointment is tomorrow at 9am.</p>"
+          },
+          {
+            to: "sarah@example.com",
+            subject: "Your appointment is tomorrow",
+            body: "<p>Hi Sarah, your appointment is tomorrow at 11am.</p>"
+          }
+        ]
+      })
+    });`} language="js" />
+
+          <p style={{ fontSize: 13, fontWeight: 600, color: theme.text, margin: "0 0 8px", fontFamily: font }}>Example response</p>
+          <CodeBlock code={`{
+      "success": true,
+      "total": 3,
+      "delivered": 2,
+      "failed": 1,
+      "results": [
+        { "to": "+13025550100", "status": "sent" },
+        { "to": "+14105550147", "status": "sent" },
+        { "to": "+13025550288", "status": "failed", "error": "Invalid phone number" }
+      ]
+    }`} />
+        </Section>
+
     {/* Error Handling */}
     <Section
       title="Error Handling"
