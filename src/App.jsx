@@ -13,6 +13,7 @@ import { Scheduled } from "./views/Scheduled";
 import { Settings } from "./views/Settings";
 import { INITIAL_HISTORY } from "./data/initialData";
 import { BulkSend } from "./views/BulkSend";
+import { Docs } from "./views/Docs";
 
 export default function App() {
   const [view, setView] = useState("dashboard");
@@ -55,6 +56,7 @@ export default function App() {
         {view === "scheduled" && <Scheduled />}
         {view === "settings" && <Settings />}
         {view === "bulksend" && <BulkSend templates={templates} setHistory={setHistory} />}
+        {view === "docs" && <Docs />}
       </main>
     </div>
   );
