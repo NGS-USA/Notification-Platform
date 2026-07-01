@@ -2,6 +2,7 @@
 
 import { theme, font } from "../../theme";
 import { IconHome, IconFile, IconSend, IconSettings, IconGrid, IconList, IconClock } from "../../icons";
+import { IconHome, IconFile, IconSend, IconSettings, IconGrid, IconList, IconClock, IconUpload } from "../../icons";
 
 const IconLogOut = ({ size = 16, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { id: "apps", label: "Apps", icon: IconGrid },
   { id: "templates", label: "Templates", icon: IconFile },
   { id: "send", label: "Send", icon: IconSend },
+  { id: "bulksend", label: "Bulk Send", icon: IconUpload },
   { id: "logs", label: "Logs", icon: IconList },
   { id: "scheduled", label: "Scheduled", icon: IconClock },
   { id: "settings", label: "Settings", icon: IconSettings },
