@@ -1,7 +1,6 @@
 "use client";
 
 import { theme, font } from "../../theme";
-import { IconHome, IconFile, IconSend, IconSettings, IconGrid, IconList, IconClock } from "../../icons";
 import { IconHome, IconFile, IconSend, IconSettings, IconGrid, IconList, IconClock, IconUpload } from "../../icons";
 
 const IconLogOut = ({ size = 16, color = "currentColor" }) => (
